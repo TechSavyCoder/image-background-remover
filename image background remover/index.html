@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Background Remover</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            text-align: center;
+        }
+        #output {
+            max-width: 100%;
+        }
+        #mask {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Background Remover</h1>
+        <input type="file" id="imageInput" accept="image/*">
+        <br><br>
+        <button id="removeBackground">Remove Background</button>
+        <br><br>
+        <canvas id="output"></canvas>
+        <a id="downloadLink" style="display:none">Download Result</a>
+    </div>
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const removeBackgroundButton = document.getElementById('removeBackground');
+        const outputCanvas = document.getElementById('output');
+        const downloadLink = document.getElementById('downloadLink');
+
+        removeBackgroundButton.addEventListener('click', () => {
+            const imageFile = imageInput.files[0];
+            if (imageFile) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = function () {
+                        outputCanvas.width = img.width;
+                        outputCanvas.height = img.height;
+                        const ctx = outputCanvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+
+                        // Simulate background removal (replace white background with transparent)
+                        const imageData = ctx.getImageData(0, 0, outputCanvas.width, outputCanvas.height);
+                        const pixels = imageData.data;
+                        for (let i = 0; i < pixels.length; i += 4) {
+                            const r = pixels[i];
+                            const g = pixels[i + 1];
+                            const b = pixels[i + 2];
+                            if (r > 200 && g > 200 && b > 200) {
+                                pixels[i + 3] = 0; // Set alpha channel to 0 for white pixels
+                            }
+                        }
+                        ctx.putImageData(imageData, 0, 0);
+
+                        // Enable download link
+                        downloadLink.href = outputCanvas.toDataURL('image/png');
+                        downloadLink.download = 'output.png';
+                        downloadLink.style.display = 'block';
+                    };
+                };
+                reader.readAsDataURL(imageFile);
+            }
+        });
+    </script>
+</body>
+</html>
